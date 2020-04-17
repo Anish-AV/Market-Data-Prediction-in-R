@@ -1,5 +1,6 @@
 # Market Data Prediction in R
-Predicted the purchase of a product with data set containing 14 features
+Predicted the purchase of a product using four machine learning models
+
 
 
 ## Libraries

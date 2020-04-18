@@ -10,7 +10,7 @@ library(caret)
 ###################################################################################
 
 Market_data= read.csv("data\\Market.csv")
-Market_data_pred=read.csv("data\\Market_pred.csv")
+Market_data_pred=read.csv("Predictions\\Market_pred.csv")
 
 
 
@@ -42,30 +42,22 @@ CV_Hyper_parameter_tuning=function(task,learner,ps){
 ###################################################################################
 #                                     Random Forest                               #
 ###################################################################################
-#Creating the task
-task=makeClassifTask(data=Market_data,target="purchase")
+#Predictions using random forest on the market pred
+market_task=makeClassifTask(data = Market_data,target="purchase")
 
-#Random Forest robust evaluation
-learner_rf=makeLearner("classif.randomForest")
-
+market_learner=makeLearner("classif.randomForest")
 #print(getParamSet(learner_rf))
-paramset_rf=makeParamSet(makeDiscreteParam("ntree",values=seq(50,500,50))
+market_paramset=makeParamSet(makeDiscreteParam("ntree",values=seq(50,500,50))
 )
-res_rf=CV_Hyper_parameter_tuning(task,learner_rf,paramset_rf)
-#View(res_rf$x)
-#View(res_rf$y)
+market_res=CV_Hyper_parameter_tuning(market_task,market_learner,market_paramset)
+#View(market_res$x)
+#View(market_res$y)
 
-#learner
-learner_rf=makeLearner("classif.randomForest",ntree=res_rf$x$ntree)
+market_learner=makeLearner("classif.randomForest",ntree=market_res$x$ntree)
+market_model=mlr::train(market_learner,market_task)
+market_predict=predict(market_model,newdata=Market_data_pred)
+Market_data_pred=Market_data_pred[-15]
+purchase= market_predict[["data"]][["response"]]
+Market_data_pred=cbind(Market_data_pred,purchase)
 
-#model
-model_rf=mlr::train(learner_rf,task,subset = train)
-
-#predict
-predict_rf=predict(model_rf,task,subset=test[-ncol(Market_data)])
-
-#performance evaluation
-accuracy_rf=performance(predict_rf,measures = acc)
-cm_rf=confusionMatrix(predict_rf[["data"]][["truth"]],predict_rf[["data"]][["response"]])
-plot(cm_rf$table,main="confusion matrix")
-#print(acc_rf)
+write.csv(Market_data_pred,"Predictions\\Market_prediction.csv")
